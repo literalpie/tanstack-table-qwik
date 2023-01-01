@@ -1,5 +1,12 @@
-import { component$, useSignal, useWatch$, $, QRL } from '@builder.io/qwik';
-import type { DocumentHead } from '@builder.io/qwik-city';
+import {
+  component$,
+  useSignal,
+  useTask$,
+  $,
+  QRL,
+  useWatch$,
+} from "@builder.io/qwik";
+import type { DocumentHead } from "@builder.io/qwik-city";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -7,8 +14,8 @@ import {
   getFilteredRowModel,
   Table,
   TableOptions,
-} from '@tanstack/table-core';
-import { getTableHelpers } from '~/qwik-table';
+} from "@tanstack/table-core";
+import { getTableHelpers } from "~/qwik-table";
 
 interface Person {
   name: string;
@@ -17,12 +24,12 @@ interface Person {
 
 export const columnHelper = createColumnHelper<Person>();
 export const columns = [
-  columnHelper.accessor('name', {
-    header: 'Name',
+  columnHelper.accessor("name", {
+    header: "Name",
     enableGlobalFilter: true,
   }),
-  columnHelper.accessor('age', {
-    header: 'Age',
+  columnHelper.accessor("age", {
+    header: "Age",
     enableGlobalFilter: false,
   }),
 ];
@@ -30,29 +37,30 @@ export const columns = [
 export const defaultTableOptions: TableOptions<Person> = {
   columns,
   data: [
-    { name: 'Ben', age: 1 },
-    { name: 'Kasey', age: 3 },
-    { name: 'Bethany', age: 2 },
-    { name: 'Darrell', age: 21 },
-    { name: 'Greg', age: 12 },
+    { name: "Ben", age: 1 },
+    { name: "Kasey", age: 3 },
+    { name: "Bethany", age: 2 },
+    { name: "Darrell", age: 21 },
+    { name: "Greg", age: 12 },
   ],
-  state: { sorting: [{ desc: true, id: 'name' }] },
+  state: { sorting: [{ desc: true, id: "name" }] },
   getFilteredRowModel: getFilteredRowModel(),
   onStateChange: () => {},
-  renderFallbackValue: 'render fallback',
+  renderFallbackValue: "render fallback",
   getSortedRowModel: getSortedRowModel(),
   getCoreRowModel: getCoreRowModel(),
 };
 
 export const { getTable: getPersonTable, useTable: usePersonTable } =
-  getTableHelpers(defaultTableOptions);
+  getTableHelpers($(defaultTableOptions));
 
 export default component$(() => {
   const tableState = usePersonTable();
   const table = useSignal<Table<Person>>();
-  useWatch$(({ track }) => {
+  useTask$(async ({ track }) => {
     track(() => tableState.state);
-    table.value = getPersonTable(tableState);
+    console.log("comp table state change");
+    table.value = await getPersonTable(tableState);
   });
   // table is an object that can be mutated by calling functions, but those mutations won't trigger the signal.
   // Reference state in render function so that the table gets rerendered when state changes
@@ -73,13 +81,13 @@ export default component$(() => {
         Click a table header to sort, or enter text into the input to filter.
       </p>
       <p>
-        Sorting seems to reveal an issue in Qwik. See{' '}
+        Sorting seems to reveal an issue in Qwik. See{" "}
         <a href="https://github.com/BuilderIO/qwik/issues/2414">
           this issue on GitHub
         </a>
       </p>
       <label>
-        Filter{' '}
+        Filter{" "}
         <input
           type="text"
           onKeyUp$={(e) => {
@@ -101,9 +109,10 @@ export default component$(() => {
                 return (
                   <th
                     key={id}
-                    onClick$={(e) => {
-                      const table = getPersonTable(tableState);
-                      table.getColumn(id).getToggleSortingHandler?.()?.(e);
+                    onClick$={async (e) => {
+                      const clickTable = await getPersonTable(tableState);
+                      clickTable.getColumn(id).getToggleSortingHandler?.()?.(e);
+                      table.value = clickTable;
                     }}
                   >
                     {column.columnDef.header}
@@ -132,5 +141,5 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: 'Tanstack Qwik Table',
+  title: "Tanstack Qwik Table",
 };

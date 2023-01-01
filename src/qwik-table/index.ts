@@ -2,14 +2,17 @@ import {
   NoSerialize,
   noSerialize,
   useStore,
-  useWatch$,
-} from '@builder.io/qwik';
+  useTask$,
+  $,
+  QRL,
+  implicit$FirstArg,
+} from "@builder.io/qwik";
 import {
   TableOptions,
   createTable,
   Table,
   TableState,
-} from '@tanstack/table-core';
+} from "@tanstack/table-core";
 
 interface QwikTableState<T> {
   /** The table instance - Should not be referenced directly! Use `getTable` to get a table object from this state. */
@@ -21,16 +24,17 @@ interface QwikTableState<T> {
  * Use this to make a hook and table getter with specific options.
  * The hook and getter should be exported from your file so that they can be referenced inside your components.
  */
-export const getTableHelpers = <T, U>(options: TableOptions<T>) => {
-  const getTable = (qTableState: QwikTableState<T>) => {
+export const getTableHelpers = <T, U>(optionsQ: QRL<TableOptions<T>>) => {
+  const getTable = $(async (qTableState: QwikTableState<T>) => {
+    const options = await optionsQ.resolve();
     if (qTableState._table) {
-      console.info('get table with a table that already existed');
+      console.info("get table with a table that already existed");
       return qTableState._table;
     }
-    console.info('getTable had to make a new table');
+    console.info("getTable had to make a new table");
     const resolvedOptions = {
       onStateChange: () => {},
-      renderFallbackValue: 'fallback',
+      renderFallbackValue: "fallback",
       ...options,
       state: { ...options.state, ...qTableState.state },
     };
@@ -41,7 +45,7 @@ export const getTableHelpers = <T, U>(options: TableOptions<T>) => {
       ...prev,
       state: { ...initialState, ...resolvedOptions.state },
       onStateChange: (updater) => {
-        if (typeof updater === 'function') {
+        if (typeof updater === "function") {
           qTableState.state = updater(qTableState.state!);
         } else {
           qTableState.state = updater; // Not tested
@@ -50,31 +54,35 @@ export const getTableHelpers = <T, U>(options: TableOptions<T>) => {
     }));
     qTableState._table = noSerialize(table);
     qTableState.state = { ...initialState, ...resolvedOptions.state };
-
     return table;
-  };
+  });
 
   const useTable = () => {
     const qTableState = useStore<QwikTableState<T>>({});
-    useWatch$(() => {
-      if (!qTableState._table) {
-        getTable(qTableState);
-      }
-    });
-    useWatch$(({ track }) => {
+    useTask$(({ track }) => {
       track(() => qTableState.state);
-
-      qTableState._table?.setOptions((prev) => ({
-        ...prev,
-        state: { ...qTableState.state },
-        onStateChange: (updater) => {
-          if (typeof updater === 'function') {
-            qTableState.state = updater(qTableState.state!);
-          } else {
-            qTableState.state = updater; // Not tested
-          }
-        },
-      }));
+      if (!qTableState._table) {
+        console.log("no table in track");
+        getTable(qTableState);
+      } else {
+        console.log("table");
+      }
+      console.log("table exists");
+      qTableState._table?.setOptions((prev) => {
+        console.log("setting options");
+        return {
+          ...prev,
+          state: { ...qTableState.state },
+          onStateChange: (updater) => {
+            console.log("state change");
+            if (typeof updater === "function") {
+              qTableState.state = updater(qTableState.state!);
+            } else {
+              qTableState.state = updater; // Not tested
+            }
+          },
+        };
+      });
     });
     return qTableState;
   };
@@ -85,7 +93,7 @@ export const getTableHelpers = <T, U>(options: TableOptions<T>) => {
      * It will reuse the existing table object in the state if one exists,
      * or create a new one if needed.
      */
-    getTable: noSerialize(getTable)!,
+    getTable,
     /** Returns a table state that stays in sync with the table object returned by getTable. */
     useTable,
   };
