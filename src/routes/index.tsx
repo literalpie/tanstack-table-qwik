@@ -1,4 +1,4 @@
-import { component$, useSignal, useWatch$, $, QRL } from "@builder.io/qwik";
+import { component$, useSignal, useTask$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import {
   createColumnHelper,
@@ -50,13 +50,10 @@ export const { getTable: getPersonTable, useTable: usePersonTable } =
 export default component$(() => {
   const tableState = usePersonTable();
   const table = useSignal<Table<Person>>();
-  useWatch$(({ track }) => {
+  useTask$(({ track }) => {
     track(() => tableState.state);
     table.value = getPersonTable(tableState);
   });
-  // table is an object that can be mutated by calling functions, but those mutations won't trigger the signal.
-  // Reference state in render function so that the table gets rerendered when state changes
-  tableState.state;
 
   return (
     <>

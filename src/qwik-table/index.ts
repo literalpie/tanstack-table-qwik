@@ -1,15 +1,10 @@
-import {
-  NoSerialize,
-  noSerialize,
-  useStore,
-  useWatch$,
-} from '@builder.io/qwik';
+import { NoSerialize, noSerialize, useStore, useTask$ } from "@builder.io/qwik";
 import {
   TableOptions,
   createTable,
   Table,
   TableState,
-} from '@tanstack/table-core';
+} from "@tanstack/table-core";
 
 interface QwikTableState<T> {
   /** The table instance - Should not be referenced directly! Use `getTable` to get a table object from this state. */
@@ -24,13 +19,13 @@ interface QwikTableState<T> {
 export const getTableHelpers = <T, U>(options: TableOptions<T>) => {
   const getTable = (qTableState: QwikTableState<T>) => {
     if (qTableState._table) {
-      console.info('get table with a table that already existed');
+      console.info("get table with a table that already existed");
       return qTableState._table;
     }
-    console.info('getTable had to make a new table');
+    console.info("getTable had to make a new table");
     const resolvedOptions = {
       onStateChange: () => {},
-      renderFallbackValue: 'fallback',
+      renderFallbackValue: "fallback",
       ...options,
       state: { ...options.state, ...qTableState.state },
     };
@@ -41,7 +36,7 @@ export const getTableHelpers = <T, U>(options: TableOptions<T>) => {
       ...prev,
       state: { ...initialState, ...resolvedOptions.state },
       onStateChange: (updater) => {
-        if (typeof updater === 'function') {
+        if (typeof updater === "function") {
           qTableState.state = updater(qTableState.state!);
         } else {
           qTableState.state = updater; // Not tested
@@ -56,19 +51,19 @@ export const getTableHelpers = <T, U>(options: TableOptions<T>) => {
 
   const useTable = () => {
     const qTableState = useStore<QwikTableState<T>>({});
-    useWatch$(() => {
+    useTask$(() => {
       if (!qTableState._table) {
         getTable(qTableState);
       }
     });
-    useWatch$(({ track }) => {
+    useTask$(({ track }) => {
       track(() => qTableState.state);
 
       qTableState._table?.setOptions((prev) => ({
         ...prev,
         state: { ...qTableState.state },
         onStateChange: (updater) => {
-          if (typeof updater === 'function') {
+          if (typeof updater === "function") {
             qTableState.state = updater(qTableState.state!);
           } else {
             qTableState.state = updater; // Not tested
@@ -76,6 +71,9 @@ export const getTableHelpers = <T, U>(options: TableOptions<T>) => {
         },
       }));
     });
+    // table is an object that can be mutated by calling functions, but those mutations won't trigger updates of the table.
+    // Reference state in render function so that the table gets rerendered when state changes (I don't completely understand this...).
+    qTableState.state;
     return qTableState;
   };
 
