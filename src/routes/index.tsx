@@ -1,5 +1,5 @@
-import { component$, useSignal, useWatch$, $, QRL } from '@builder.io/qwik';
-import type { DocumentHead } from '@builder.io/qwik-city';
+import { component$, useSignal, useWatch$, $, QRL } from "@builder.io/qwik";
+import type { DocumentHead } from "@builder.io/qwik-city";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -7,8 +7,8 @@ import {
   getFilteredRowModel,
   Table,
   TableOptions,
-} from '@tanstack/table-core';
-import { getTableHelpers } from '~/qwik-table';
+} from "@tanstack/table-core";
+import { getTableHelpers } from "~/qwik-table";
 
 interface Person {
   name: string;
@@ -17,12 +17,12 @@ interface Person {
 
 export const columnHelper = createColumnHelper<Person>();
 export const columns = [
-  columnHelper.accessor('name', {
-    header: 'Name',
+  columnHelper.accessor("name", {
+    header: "Name",
     enableGlobalFilter: true,
   }),
-  columnHelper.accessor('age', {
-    header: 'Age',
+  columnHelper.accessor("age", {
+    header: "Age",
     enableGlobalFilter: false,
   }),
 ];
@@ -30,16 +30,16 @@ export const columns = [
 export const defaultTableOptions: TableOptions<Person> = {
   columns,
   data: [
-    { name: 'Ben', age: 1 },
-    { name: 'Kasey', age: 3 },
-    { name: 'Bethany', age: 2 },
-    { name: 'Darrell', age: 21 },
-    { name: 'Greg', age: 12 },
+    { name: "Ben", age: 1 },
+    { name: "Kasey", age: 3 },
+    { name: "Bethany", age: 2 },
+    { name: "Darrell", age: 21 },
+    { name: "Greg", age: 12 },
   ],
-  state: { sorting: [{ desc: true, id: 'name' }] },
+  state: { sorting: [{ desc: true, id: "name" }] },
   getFilteredRowModel: getFilteredRowModel(),
   onStateChange: () => {},
-  renderFallbackValue: 'render fallback',
+  renderFallbackValue: "render fallback",
   getSortedRowModel: getSortedRowModel(),
   getCoreRowModel: getCoreRowModel(),
 };
@@ -72,14 +72,8 @@ export default component$(() => {
       <p>
         Click a table header to sort, or enter text into the input to filter.
       </p>
-      <p>
-        Sorting seems to reveal an issue in Qwik. See{' '}
-        <a href="https://github.com/BuilderIO/qwik/issues/2414">
-          this issue on GitHub
-        </a>
-      </p>
       <label>
-        Filter{' '}
+        Filter:
         <input
           type="text"
           onKeyUp$={(e) => {
@@ -117,7 +111,7 @@ export default component$(() => {
         <tbody>
           {table.value?.getRowModel().rows.map((row) => {
             return (
-              <tr key={row.id}>
+              <tr>
                 {row.getAllCells().map((cell) => (
                   <td key={cell.id}>{cell.getValue<string>()}</td>
                 ))}
@@ -132,5 +126,5 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: 'Tanstack Qwik Table',
+  title: "Tanstack Qwik Table",
 };
